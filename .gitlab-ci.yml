@@ -1,0 +1,25 @@
+image: ns8inc/nodeaws:latest
+before_script:
+  # Install yarn just in case it is not installed
+  - sudo apt-get install yarn -y
+  - yarn
+deploy:
+  variables:
+    S3_BUCKET_NAME: "crm-website"
+    CDN_DISTRIBUTION_ID: "E2NZNSW2HH9DW3"
+  script:
+  - yarn generate
+  - aws s3 cp ./dist/ s3://$S3_BUCKET_NAME/ --recursive
+  - aws cloudfront create-invalidation --distribution-id $CDN_DISTRIBUTION_ID --paths "/*"
+  only:
+  - master
+stage:
+  variables:
+    S3_BUCKET_NAME: "crm-stage"
+    CDN_DISTRIBUTION_ID: "E3BP0V9KD3MSB5"
+  script:
+  - yarn generate
+  - aws s3 cp ./dist/ s3://$S3_BUCKET_NAME/ --recursive
+  - aws cloudfront create-invalidation --distribution-id $CDN_DISTRIBUTION_ID --paths "/*"
+  only:
+  - develop
